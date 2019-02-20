@@ -28,9 +28,8 @@ for layer in model.layers:
 
 # Adding own layers
 x = model.output
-x = Conv2D(32, 3, padding="same", activation="relu")(x)
 x = Flatten()(x)
-x = Dense(64, activation="relu")(x)
+x = Dense(8, activation="relu")(x)
 x = Dropout(0.5)(x)
 x = Dense(8, activation="relu")(x)
 predictions = Dense(2, activation="softmax")(x)
@@ -38,7 +37,7 @@ predictions = Dense(2, activation="softmax")(x)
 # creating the final model
 model_final = Model(inputs=[model.input], outputs=[predictions])
 model_final.summary()
-model_final.compile(loss="categorical_crossentropy", optimizer=optimizers.RMSprop(lr=0.01),
+model_final.compile(loss="categorical_crossentropy", optimizer=optimizers.RMSprop(lr=0.0001),
                     metrics=["accuracy"])
 
 # Initiate the train and test generators with data augmentation
@@ -93,6 +92,6 @@ model_final.fit_generator(
     validation_steps=validation_samples,
     steps_per_epoch=train_samples,
     epochs=epochs,
-    class_weight={0: 0.35, 1: 0.65},
+    class_weight={0: 0.35, 1: 1},
 
     callbacks=[checkpoint, early, csvLog])
