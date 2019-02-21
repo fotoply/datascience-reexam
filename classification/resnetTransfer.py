@@ -22,7 +22,7 @@ modelname = "resnet_1"
 
 model = applications.resnet50.ResNet50(weights="imagenet", include_top=False, input_shape=(img_width, img_height, 3))
 
-# Freeze everything in the VGG model, only training classification layers which are added afterwards
+# Freeze everything in the resnet model, only training classification layers which are added afterwards
 for layer in model.layers:
     layer.trainable = False
 
