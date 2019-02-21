@@ -8,7 +8,7 @@ from keras.preprocessing.image import array_to_img
 from segmentation.augmenter import padImage
 
 PATH = os.getcwd()
-modelPath = "resnet_seg.h5"
+modelPath = "resnet_fcn.h5"
 model = load_model(modelPath)
 
 def predict(imagePath):
