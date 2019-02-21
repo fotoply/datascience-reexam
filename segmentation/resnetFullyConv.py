@@ -2,7 +2,7 @@ import os
 
 os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 
-from keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Reshape, UpSampling2D
+from keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Reshape, UpSampling2D, Add
 import numpy
 from PIL import Image, ImageOps
 from keras import applications
@@ -27,7 +27,7 @@ def train():
     print("Training data loaded")
     print("-------------------------------------------")
     print("Training starting")
-    modelname = "resnet_fcn"
+    modelname = "resnet_fcn_2"
     # Save the model after run
     checkpoint = ModelCheckpoint(modelname + ".h5", monitor='val_acc', verbose=1,
                                  save_best_only=True, save_weights_only=False,
@@ -39,7 +39,7 @@ def train():
     # Save the epoch data to a CSV file for future inspection
     csvLog = CSVLogger(modelname + ".csv")
 
-    model.fit(x=dataInput, y=dataExpected, batch_size=8, epochs=10, validation_split=0.15,
+    model.fit(x=dataInput, y=dataExpected, batch_size=8, epochs=60, validation_split=0.15,
               callbacks=[checkpoint, early, csvLog])
     print("All training completed")
     print("-------------------------------------------")
@@ -56,15 +56,23 @@ def defineModel():
     # Adding own layers
     x = model.output
     x = UpSampling2D()(x)
+    internalLayer = model.get_layer("add_13").output
+    internalLayer = Conv2D(256, 3, padding="same", activation="relu")(internalLayer)
+    x = Conv2D(256, 3, padding="same", activation="relu")(x)
+    x = Add()([x, internalLayer])
     x = Conv2D(256, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
     x = Conv2D(128, 3, padding="same", activation="relu")(x)
+    x = Conv2D(128, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
+    x = Conv2D(256, 3, padding="same", activation="relu")(x)
+    x = Add()([x, model.get_layer("add_3").output])
     x = Conv2D(64, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
+    x = Add()([x, model.get_layer("conv1").output])
     x = Conv2D(32, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
-    x = Conv2D(16, 3, padding="same", activation="relu")(x)
+    x = Conv2D(32, 3, padding="same", activation="relu")(x)
     prediction = Conv2D(3, 1, padding="same",activation="relu")(x)
 
     model = Model(inputs=model.input, outputs=prediction)
