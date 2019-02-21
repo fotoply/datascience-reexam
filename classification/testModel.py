@@ -5,7 +5,7 @@ from keras.engine.saving import load_model
 from keras.preprocessing import image
 
 PATH = os.getcwd()
-modelPath = "convnet_1.h5"
+modelPath = "resnet_1.h5"
 labels = {1: "dirty", 0: "clean"}
 
 model = load_model(modelPath)

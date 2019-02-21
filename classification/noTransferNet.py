@@ -20,9 +20,9 @@ epochs = 50
 modelname = "convnet_1"
 
 inputShape = Input(shape=(227, 227, 3))
-x = Conv2D(16, 3, padding="same", activation="relu")(inputShape)
+x = Conv2D(8, 3, padding="same", activation="relu")(inputShape)
 x = Conv2D(8, 3, padding="same", activation="relu")(x)
-x = Conv2D(2, 1, padding="same", activation="relu")(x)
+x = Conv2D(4, 1, padding="same", activation="relu")(x)
 x = MaxPool2D(padding="same")(x)
 x = Flatten()(x)
 # x = Dense(8, activation="relu")(x)
