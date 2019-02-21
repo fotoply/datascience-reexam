@@ -56,20 +56,24 @@ def defineModel():
     # Adding own layers
     x = model.output
     x = UpSampling2D()(x)
+    x = Conv2D(256, 3, padding="same", activation="relu")(x)
     internalLayer = model.get_layer("add_13").output
     internalLayer = Conv2D(256, 3, padding="same", activation="relu")(internalLayer)
-    x = Conv2D(256, 3, padding="same", activation="relu")(x)
     x = Add()([x, internalLayer])
     x = Conv2D(256, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
     x = Conv2D(128, 3, padding="same", activation="relu")(x)
+    internalLayer = model.get_layer("add_7").output
+    internalLayer = Conv2D(128, 3, padding="same", activation="relu")(internalLayer)
+    x = Add()([x, internalLayer])
     x = Conv2D(128, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
     x = Conv2D(256, 3, padding="same", activation="relu")(x)
     x = Add()([x, model.get_layer("add_3").output])
     x = Conv2D(64, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
-    x = Add()([x, model.get_layer("conv1").output])
+    x = Conv2D(64, 3, padding="same", activation="relu")(x)
+    x = Add()([x, model.get_layer("activation_1").output])
     x = Conv2D(32, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
     x = Conv2D(32, 3, padding="same", activation="relu")(x)
