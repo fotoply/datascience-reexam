@@ -28,11 +28,11 @@ for layer in model.layers:
 
 # Adding own layers
 x = model.output
-x = Conv2D(8, 3, padding="same", activation="relu")(x)
+x = Conv2D(16, 3, padding="same", activation="relu")(x)
 x = Flatten()(x)
 #x = Dense(16, activation="relu")(x)
 #x = Dropout(0.8)(x)
-#x = Dense(8, activation="relu")(x)
+x = Dense(8, activation="relu")(x)
 predictions = Dense(2, activation="softmax")(x)
 
 # creating the final model
