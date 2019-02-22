@@ -56,11 +56,11 @@ def defineModel():
     # Adding own layers
     x = model.output
     x = UpSampling2D()(x)
-    x = Conv2D(256, 3, padding="same", activation="relu")(x)
+    x = Conv2D(128, 3, padding="same", activation="relu")(x)
     internalLayer = model.get_layer("add_13").output
-    internalLayer = Conv2D(256, 3, padding="same", activation="relu")(internalLayer)
+    internalLayer = Conv2D(128, 3, padding="same", activation="relu")(internalLayer)
     x = Add()([x, internalLayer])
-    x = Conv2D(256, 3, padding="same", activation="relu")(x)
+    x = Conv2D(128, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
     x = Conv2D(128, 3, padding="same", activation="relu")(x)
     internalLayer = model.get_layer("add_7").output
@@ -77,7 +77,8 @@ def defineModel():
     x = Conv2D(32, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
     x = Conv2D(32, 3, padding="same", activation="relu")(x)
-    prediction = Conv2D(3, 1, padding="same",activation="relu")(x)
+    x = Conv2D(3, 3, padding="same", activation="sigmoid")(x)
+    prediction = Conv2D(3, 1, padding="same",activation="softmax")(x)
 
     model = Model(inputs=model.input, outputs=prediction)
     model.compile(optimizer=Adam(lr=1e-5),
