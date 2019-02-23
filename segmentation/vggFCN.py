@@ -27,7 +27,7 @@ def train():
     print("Training data loaded")
     print("-------------------------------------------")
     print("Training starting")
-    modelname = "resnet_fcn_2a"
+    modelname = "vgg_fcn_1"
     # Save the model after run
     checkpoint = ModelCheckpoint(modelname + ".h5", monitor='val_acc', verbose=1,
                                  save_best_only=True, save_weights_only=False,
@@ -47,7 +47,7 @@ def train():
 
 
 def defineModel():
-    model = applications.resnet50.ResNet50(weights="imagenet", include_top=False,
+    model = applications.vgg16.VGG16(weights="imagenet", include_top=False,
                                            input_shape=(IMG_WIDTH, IMG_HEIGHT, 3))
     # Freeze everything in the resnet model, only training classification layers which are added afterwards
     for layer in model.layers:
@@ -56,29 +56,13 @@ def defineModel():
     # Adding own layers
     x = model.output
     x = UpSampling2D()(x)
-    x = Conv2D(64, 3, padding="same", activation="relu")(x)
-    internalLayer = model.get_layer("add_13").output
-    internalLayer = Conv2D(64, 3, padding="same", activation="relu")(internalLayer)
-    x = Add()([x, internalLayer])
-    x = Conv2D(64, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
-    x = Conv2D(64, 3, padding="same", activation="relu")(x)
-    internalLayer = model.get_layer("add_7").output
-    internalLayer = Conv2D(64, 3, padding="same", activation="relu")(internalLayer)
-    x = Add()([x, internalLayer])
-    x = Conv2D(64, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
-    x = Conv2D(256, 3, padding="same", activation="relu")(x)
-    x = Add()([x, model.get_layer("add_3").output])
-    x = Conv2D(64, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
-    x = Conv2D(64, 3, padding="same", activation="relu")(x)
-    x = Add()([x, model.get_layer("activation_1").output])
-    x = Conv2D(32, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
     x = Conv2D(32, 3, padding="same", activation="relu")(x)
     prediction = Conv2D(3, 3, padding="same", activation="sigmoid")(x)
-    #prediction = Conv2D(3, 1, padding="same",activation="si")(x)
+    #prediction = Conv2D(3, 1, padding="same",activation="sigmoid")(x)
 
     model = Model(inputs=model.input, outputs=prediction)
     model.compile(optimizer=Adam(lr=1e-5),
