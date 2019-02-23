@@ -54,15 +54,28 @@ def defineModel():
         layer.trainable = False
 
     # Adding own layers
-    x = model.output
+    x = model.get_layer("block5_conv3").output
+    x = Conv2D(64, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
+    #identity = model.get_layer("block4_conv3").output
+    #identity = Conv2D(16, 3, padding="same", activation="relu") (identity)
+    #x = Add()([x, identity])
+    x = Conv2D(32, 3, padding="same", activation="relu") (x)
     x = UpSampling2D()(x)
+    identity = model.get_layer("block3_conv3").output
+    identity = Conv2D(32, 3, padding="same", activation="relu") (identity)
+    x = Add()([x, identity])
+    x = Conv2D(32, 3, padding="same", activation="relu") (x)
     x = UpSampling2D()(x)
-    x = UpSampling2D()(x)
+    identity = model.get_layer("block2_conv2").output
+    identity = Conv2D(32, 3, padding="same", activation="relu") (identity)
+    x = Add()([x, identity])
+    x = Conv2D(32, 3, padding="same", activation="relu") (x)
     x = UpSampling2D()(x)
     x = Conv2D(32, 3, padding="same", activation="relu")(x)
-    prediction = Conv2D(3, 3, padding="same", activation="sigmoid")(x)
-    #prediction = Conv2D(3, 1, padding="same",activation="sigmoid")(x)
+    x = Conv2D(16, 3, padding="same", activation="relu")(x)
+    #prediction = Conv2D(3, 3, padding="same", activation="sigmoid")(x)
+    prediction = Conv2D(3, 1, padding="same",activation="sigmoid")(x)
 
     model = Model(inputs=model.input, outputs=prediction)
     model.compile(optimizer=Adam(lr=1e-5),
