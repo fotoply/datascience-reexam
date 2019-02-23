@@ -2,9 +2,9 @@ import os
 
 os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 
-from keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Reshape, UpSampling2D, Add
+from keras.layers import Conv2D, UpSampling2D, Concatenate
 import numpy
-from PIL import Image, ImageOps
+from PIL import Image
 from keras import applications
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.models import Model
@@ -27,7 +27,7 @@ def train():
     print("Training data loaded")
     print("-------------------------------------------")
     print("Training starting")
-    modelname = "vgg_fcn_1"
+    modelname = "vgg_fcn_2"
     # Save the model after run
     checkpoint = ModelCheckpoint(modelname + ".h5", monitor='val_acc', verbose=1,
                                  save_best_only=True, save_weights_only=False,
@@ -40,7 +40,7 @@ def train():
     csvLog = CSVLogger(modelname + ".csv")
 
     model.fit(x=dataInput, y=dataExpected, batch_size=8, epochs=60, validation_split=0.15,
-              callbacks=[checkpoint, early, csvLog] )
+              callbacks=[checkpoint, early, csvLog])
     print("All training completed")
     print("-------------------------------------------")
     print("Model has been saved")
@@ -48,34 +48,43 @@ def train():
 
 def defineModel():
     model = applications.vgg16.VGG16(weights="imagenet", include_top=False,
-                                           input_shape=(IMG_WIDTH, IMG_HEIGHT, 3))
+                                     input_shape=(IMG_WIDTH, IMG_HEIGHT, 3))
     # Freeze everything in the resnet model, only training classification layers which are added afterwards
     for layer in model.layers:
         layer.trainable = False
 
     # Adding own layers
-    x = model.get_layer("block5_conv3").output
+    x = model.output
+    x = UpSampling2D()(x)
+    x = Conv2D(128, 3, padding="same", activation="relu")(x)
     x = Conv2D(64, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
-    #identity = model.get_layer("block4_conv3").output
-    #identity = Conv2D(16, 3, padding="same", activation="relu") (identity)
-    #x = Add()([x, identity])
-    x = Conv2D(32, 3, padding="same", activation="relu") (x)
+
+    identity = model.get_layer("block3_pool").output
+    identity = Conv2D(64, 3, padding="same", activation="relu") (identity)
+    x = Concatenate()([x, identity])
+    x = Conv2D(64, 3, padding="same", activation="relu")(x)
+    x = Conv2D(64, 3, padding="same", activation="relu")(x)
     x = UpSampling2D()(x)
-    identity = model.get_layer("block3_conv3").output
-    identity = Conv2D(32, 3, padding="same", activation="relu") (identity)
-    x = Add()([x, identity])
-    x = Conv2D(32, 3, padding="same", activation="relu") (x)
-    x = UpSampling2D()(x)
-    identity = model.get_layer("block2_conv2").output
-    identity = Conv2D(32, 3, padding="same", activation="relu") (identity)
-    x = Add()([x, identity])
-    x = Conv2D(32, 3, padding="same", activation="relu") (x)
-    x = UpSampling2D()(x)
+
+    identity = model.get_layer("block2_pool").output
+    identity = Conv2D(64, 3, padding="same", activation="relu") (identity)
+    x = Concatenate()([x, identity])
     x = Conv2D(32, 3, padding="same", activation="relu")(x)
+    x = Conv2D(32, 3, padding="same", activation="relu")(x)
+    x = UpSampling2D()(x)
+
+    identity = model.get_layer("block1_pool").output
+    identity = Conv2D(64, 3, padding="same", activation="relu") (identity)
+    x = Concatenate()([x, identity])
+    x = Conv2D(32, 3, padding="same", activation="relu")(x)
+    x = Conv2D(32, 3, padding="same", activation="relu")(x)
+    x = UpSampling2D()(x)
+
     x = Conv2D(16, 3, padding="same", activation="relu")(x)
-    #prediction = Conv2D(3, 3, padding="same", activation="sigmoid")(x)
-    prediction = Conv2D(3, 1, padding="same",activation="sigmoid")(x)
+    x = Conv2D(16, 3, padding="same", activation="relu")(x)
+    prediction = Conv2D(3, 1, padding="same", activation="sigmoid")(x)
+    # prediction = Conv2D(3, 1, padding="same",activation="softmax")(x)
 
     model = Model(inputs=model.input, outputs=prediction)
     model.compile(optimizer=Adam(lr=1e-5),
